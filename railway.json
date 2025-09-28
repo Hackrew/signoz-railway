@@ -1,0 +1,31 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "clickhouse": {
+      "dockerfilePath": "./clickhouse/Dockerfile.clickhouse",
+      "context": "./clickhouse"
+    },
+    "signoz": {
+      "dockerfilePath": "./signoz/Dockerfile.signoz",
+      "context": "./signoz"
+    },
+    "otel": {
+      "dockerfilePath": "./signoz/Dockerfile.otel",
+      "context": "./signoz"
+    }
+  },
+  "deploy": {
+    "clickhouse": {
+      "startCommand": "",
+      "restartPolicyType": "ON_FAILURE"
+    },
+    "signoz": {
+      "startCommand": "",
+      "restartPolicyType": "ON_FAILURE"
+    },
+    "otel": {
+      "startCommand": "",
+      "restartPolicyType": "ON_FAILURE"
+    }
+  }
+}
