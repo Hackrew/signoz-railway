@@ -1,31 +1,37 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "build": {
+  "services": {
     "clickhouse": {
-      "dockerfilePath": "./clickhouse/Dockerfile.clickhouse",
-      "context": "./clickhouse"
+      "build": {
+        "builder": "dockerfile",
+        "dockerfilePath": "./clickhouse/Dockerfile.clickhouse",
+        "context": "./clickhouse"
+      },
+      "deploy": {
+        "restartPolicyType": "ON_FAILURE"
+      }
     },
     "signoz": {
-      "dockerfilePath": "./signoz/Dockerfile.signoz",
-      "context": "./signoz"
+      "build": {
+        "builder": "dockerfile",
+        "dockerfilePath": "./signoz/Dockerfile.signoz",
+        "context": "./signoz"
+      },
+      "deploy": {
+        "restartPolicyType": "ON_FAILURE"
+      },
+      "dependsOn": ["clickhouse"]
     },
     "otel": {
-      "dockerfilePath": "./signoz/Dockerfile.otel",
-      "context": "./signoz"
-    }
-  },
-  "deploy": {
-    "clickhouse": {
-      "startCommand": "",
-      "restartPolicyType": "ON_FAILURE"
-    },
-    "signoz": {
-      "startCommand": "",
-      "restartPolicyType": "ON_FAILURE"
-    },
-    "otel": {
-      "startCommand": "",
-      "restartPolicyType": "ON_FAILURE"
+      "build": {
+        "builder": "dockerfile",
+        "dockerfilePath": "./signoz/Dockerfile.otel",
+        "context": "./signoz"
+      },
+      "deploy": {
+        "restartPolicyType": "ON_FAILURE"
+      },
+      "dependsOn": ["signoz"]
     }
   }
 }
