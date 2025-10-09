@@ -40,7 +40,7 @@
       "deploy": {
         "restartPolicyType": "ON_FAILURE"
       },
-      "dependsOn": ["clickhouse"],
+      "dependsOn": ["clickhouse"]
     },
     "signoz": {
       "build": {
