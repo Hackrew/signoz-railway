@@ -1,6 +1,22 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "services": {
+    "zookeeper": {
+      "build": {
+        "builder": "dockerhub",
+        "image": "signoz/zookeeper:3.7.1"
+      },
+      "deploy": {
+        "restartPolicyType": "ON_FAILURE"
+      },
+      "env": {
+          "ALLOW_ANONYMOUS_LOGIN": "yes",
+          "ZOO_AUTOPURGE_INTERVAL": "1",
+          "ZOO_ENABLE_PROMETHEUS_METRICS": "yes",
+          "ZOO_PROMETHEUS_METRICS_PORT_NUMBER": "9141",
+          "ZOO_SERVER_ID": "1"
+      }
+    },
     "clickhouse": {
       "build": {
         "builder": "dockerfile",
@@ -9,7 +25,22 @@
       },
       "deploy": {
         "restartPolicyType": "ON_FAILURE"
+      },
+      "dependsOn": ["zookeeper"],
+      "env": {
+          "CLICKHOUSE_SKIP_USER_SETUP": "1",
+          "PORT": "8123"
       }
+    },
+    "signoz-async-schema-migrator": {
+      "build": {
+        "builder": "dockerhub",
+        "image": "signoz/signoz-schema-migrator:v0.128.1-rc.1"
+      },
+      "deploy": {
+        "restartPolicyType": "ON_FAILURE"
+      },
+      "dependsOn": ["clickhouse"],
     },
     "signoz": {
       "build": {
@@ -20,9 +51,29 @@
       "deploy": {
         "restartPolicyType": "ON_FAILURE"
       },
+      "dependsOn": ["clickhouse", "signoz-sync-schema-migrator"],
+      "env": {
+          "DASHBOARDS_PATH": "/root/config/dashboards",
+          "DOT_METRICS_ENABLED": "true",
+          "GODEBUG": "netdns=go",
+          "SIGNOZ_ALERTMANAGER_PROVIDER": "signoz",
+          "SIGNOZ_SQLSTORE_SQLITE_PATH": "/var/lib/signoz/signoz.db",
+          "SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN": "tcp://clickhouse:9000",
+          "STORAGE": "clickhouse",
+          "TELEMETRY_ENABLED": "true"
+      }
+    },
+    "signoz-sync-schema-migrator": {
+      "build": {
+        "builder": "dockerhub",
+        "image": "signoz/signoz-schema-migrator:v0.128.1-rc.1"
+      },
+      "deploy": {
+        "restartPolicyType": "ON_FAILURE"
+      },
       "dependsOn": ["clickhouse"]
     },
-    "otel": {
+    "signoz-otel-collector": {
       "build": {
         "builder": "dockerfile",
         "dockerfilePath": "./signoz/Dockerfile.otel",
@@ -31,7 +82,11 @@
       "deploy": {
         "restartPolicyType": "ON_FAILURE"
       },
-      "dependsOn": ["signoz"]
+      "dependsOn": ["clickhouse", "signoz-sync-schema-migrator", "signoz"],
+      "env": {
+          "LOW_CARDINAL_EXCEPTION_GROUPING": "false",
+          "OTEL_RESOURCE_ATTRIBUTES": "host.name=signoz-host,os.type=linux"
+      }
     }
   }
 }
