@@ -1,0 +1,28 @@
+receivers:
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:14250"  # Listening for traces from Bifrost (Jaeger or OTLP)
+
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4318"  # Listening for logs from Bifrost (OTLP logs)
+
+exporters:
+  otlp:
+    endpoint: "localhost:4317"  # SigNoz trace endpoint (OTLP)
+    insecure: true
+
+  otlp/logs:
+    endpoint: "localhost:4318"  # SigNoz log endpoint (OTLP)
+    insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [jaeger]
+      exporters: [otlp]
+    logs:
+      receivers: [otlp]
+      exporters: [otlp/logs]
